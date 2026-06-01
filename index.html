@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nivelamento Geométrico: Lei dos Cossenos</title>
+
+    <!-- KaTeX CSS e JS (Renderização Matemática) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+    <!-- html2canvas (Para JPG) e html2pdf (Para PDF) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        /* === VARIÁVEIS CYBERPUNK === */
+        :root {
+            --bg-dark: #050508;
+            --text-main: #e0e6ed;
+            --cyan: #00f3ff;
+            --purple: #bc13fe;
+            --green: #00ff66;
+            --red: #ff003c;
+            --yellow: #ffee00;
+            --panel-bg: rgba(10, 15, 25, 0.85);
+            --font-main: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            --font-mono: 'Consolas', 'Courier New', monospace;
+            --card-border: 4px;
+        }
+
+        /* === TEMA LIGHT (ALTO CONTRASTE) === */
+        body.light-mode {
+            --bg-dark: #f4f6f8;
+            --text-main: #111111;
+            --cyan: #005bb5;
+            --purple: #7a00a6;
+            --green: #007a33;
+            --red: #b30026;
+            --yellow: #a67c00;
+            --panel-bg: #ffffff;
+            --card-border: 2px;
+        }
+        body.light-mode .aurora-bg { display: none; }
+        body.light-mode .tron-card { box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important; border-color: #ddd; }
+        body.light-mode h1, body.light-mode h2 { text-shadow: none; color: #111; border-bottom-color: #ccc; }
+        body.light-mode .math-box { background: #f8f9fa; border-left-color: var(--purple); color: #000; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        body.light-mode .song-box { background: #fff8d6; color: #856404; border-color: #ffe8a1; box-shadow: none; }
+        body.light-mode .dica-ouro { background: #e0f7fa; border-left-color: #00838f; color: #006064; box-shadow: none; }
+        body.light-mode .login-box { background: #fff; border-color: #ccc; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        body.light-mode .login-input { color: #000; border-color: #999; }
+        
+        /* Ajuste de Contraste nas Fórmulas KaTeX no Modo Claro */
+        body.light-mode span[style*="#00f3ff"] { color: #005bb5 !important; }
+        body.light-mode span[style*="#bc13fe"] { color: #7a00a6 !important; }
+        body.light-mode span[style*="#ffee00"] { color: #a67c00 !important; }
+
+        /* === RESET E BASE === */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: var(--font-main); background-color: var(--bg-dark); color: var(--text-main); overflow-x: hidden; min-height: 100vh; transition: background-color 0.3s; line-height: 1.6; }
+        h1, h2, h3 { text-transform: uppercase; letter-spacing: 1px; color: var(--cyan); text-shadow: 0 0 10px var(--cyan); }
+        p { margin-bottom: 1rem; font-size: 1.1rem; text-align: justify; }
+
+        /* === BACKGROUND ANIMADO (AURORA BOREAL) === */
+        .aurora-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; overflow: hidden; background: var(--bg-dark); }
+        .aurora-blob { position: absolute; filter: blur(100px); border-radius: 50%; opacity: 0.6; animation: float 20s infinite alternate ease-in-out; }
+        .blob-1 { background: var(--cyan); width: 60vw; height: 60vh; top: -10vh; left: -10vw; }
+        .blob-2 { background: var(--purple); width: 50vw; height: 50vh; bottom: -10vh; right: -10vw; animation-delay: -5s; }
+        .blob-3 { background: #004d40; width: 70vw; height: 60vh; top: 30vh; left: 20vw; animation-delay: -10s; }
+        @keyframes float { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(10vw, 10vh) scale(1.1); } }
+        
+        body.safe-neon .aurora-blob { animation: none !important; opacity: 0.2; }
+        body.safe-neon * { box-shadow: none !important; text-shadow: none !important; transition: none !important; }
+
+        /* === TELA DE LOGIN INICIAL === */
+        .login-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(5,5,8,0.98); z-index: 90000; display: flex; justify-content: center; align-items: center; flex-direction: column; backdrop-filter: blur(10px); transition: opacity 0.5s; }
+        .login-box { background: var(--panel-bg); border: 2px solid var(--cyan); padding: 40px; text-align: center; border-radius: 10px; max-width: 500px; width: 90%; box-shadow: 0 0 30px rgba(0, 243, 255, 0.2); }
+        .login-box h2 { font-size: 2rem; margin-bottom: 10px; }
+        .login-input { width: 100%; padding: 15px; margin: 25px 0; font-size: 1.2rem; background: transparent; border: 1px solid var(--purple); color: #fff; text-align: center; outline: none; font-family: var(--font-mono); border-radius: 5px; }
+        .login-input:focus { border-color: var(--cyan); box-shadow: 0 0 15px rgba(0, 243, 255, 0.3); }
+        .btn-login { background: var(--cyan); color: #000; border: none; padding: 15px; width: 100%; font-size: 1.2rem; font-weight: bold; cursor: pointer; text-transform: uppercase; border-radius: 5px; transition: 0.3s; }
+        .btn-login:hover { background: #fff; box-shadow: 0 0 20px #fff; }
+
+        /* === PAINEL DE ACESSIBILIDADE E PROGRESSO === */
+        .top-panel { position: sticky; top: 0; padding: 15px 10px; background: rgba(0, 0, 0, 0.95); z-index: 1000; border-bottom: 1px solid var(--cyan); display: flex; flex-direction: column; align-items: center; gap: 10px; backdrop-filter: blur(5px); }
+        body.light-mode .top-panel { background: rgba(255, 255, 255, 0.95); border-bottom-color: #ccc; }
+        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+        .btn-access { background: transparent; border: 1px solid var(--cyan); color: var(--cyan); padding: 8px 15px; cursor: pointer; font-size: 0.9rem; font-family: var(--font-mono); text-transform: uppercase; transition: 0.3s; border-radius: 4px; }
+        .btn-access:hover, .btn-access.active { background: var(--cyan); color: #000; font-weight: bold; }
+        
+        .progress-wrapper { width: 100%; max-width: 600px; background: #222; height: 15px; border-radius: 10px; overflow: hidden; border: 1px solid #444; }
+        body.light-mode .progress-wrapper { background: #eee; border-color: #ccc; }
+        .progress-fill { width: 0%; height: 100%; background: var(--cyan); box-shadow: 0 0 10px var(--cyan); transition: width 0.5s ease-in-out; display: flex; align-items: center; justify-content: flex-end; padding-right: 5px; color: #000; font-size: 0.7rem; font-weight: bold; font-family: var(--font-mono); }
+        
+        .reading-ruler { position: fixed; left: 0; width: 100vw; height: 50px; background: rgba(0, 243, 255, 0.15); border-top: 1px solid rgba(0, 243, 255, 0.5); border-bottom: 1px solid rgba(0, 243, 255, 0.5); pointer-events: none; z-index: 9999; display: none; transform: translateY(-50%); }
+        body.ruler-active .reading-ruler { display: block; }
+        body.light-mode .reading-ruler { background: rgba(0,0,0,0.1); border-color: rgba(0,0,0,0.3); }
+
+        /* === CONTAINER E CARDS === */
+        .container { max-width: 1000px; margin: 40px auto; padding: 0 20px; z-index: 10; position: relative; }
+        .header-title { text-align: center; margin-bottom: 20px; font-size: 2.2rem; }
+        
+        .dica-ouro { background: rgba(0, 128, 128, 0.15); border-left: 5px solid #40e0d0; padding: 15px; margin-bottom: 40px; font-size: 1.05rem; color: #a8f0ea; border-radius: 0 8px 8px 0; }
+        .dica-ouro strong { color: #40e0d0; }
+
+        .tron-card {
+            background: var(--panel-bg);
+            border: var(--card-border) solid var(--cyan);
+            padding: 30px; margin-bottom: 40px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2), inset 0 0 10px rgba(0, 243, 255, 0.05);
+            transition: all 0.5s ease;
+        }
+        .tron-card h2 { border-bottom: 1px solid var(--purple); padding-bottom: 10px; margin-bottom: 20px; }
+        
+        /* ESTADOS DE CORES NAS BORDAS (FEEDBACK VISUAL DO CARD) */
+        .tron-card.status-green { border-color: var(--green); box-shadow: 0 0 20px rgba(0,255,102,0.3), inset 0 0 10px rgba(0,255,102,0.1); }
+        .tron-card.status-green h2 { border-color: var(--green); color: var(--green); text-shadow: 0 0 10px var(--green); }
+        
+        .tron-card.status-yellow { border-color: var(--yellow); box-shadow: 0 0 20px rgba(255,238,0,0.3), inset 0 0 10px rgba(255,238,0,0.1); }
+        .tron-card.status-yellow h2 { border-color: var(--yellow); color: var(--yellow); text-shadow: 0 0 10px var(--yellow); }
+        
+        .tron-card.status-red { border-color: var(--red); box-shadow: 0 0 20px rgba(255,0,60,0.3), inset 0 0 10px rgba(255,0,60,0.1); }
+        .tron-card.status-red h2 { border-color: var(--red); color: var(--red); text-shadow: 0 0 10px var(--red); }
+
+        .math-box { text-align: center; margin: 25px 0; font-size: 1.4rem; padding: 20px 10px; background: rgba(0,0,0,0.5); border-left: 4px solid var(--purple); overflow-x: auto; border-radius: 0 8px 8px 0; }
+        .song-box { background: rgba(0,0,0,0.7); border: 1px dashed var(--yellow); padding: 20px; text-align: center; font-family: var(--font-mono); margin: 20px 0; color: var(--yellow); font-size: 1.2rem; font-style: italic; border-radius: 8px; }
+
+        /* === BOTÕES DE AUTODECLARAÇÃO === */
+        .eval-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 30px; }
+        .btn-eval { padding: 12px; font-size: 0.95rem; cursor: pointer; border: 2px solid; background: transparent; transition: 0.3s; font-family: var(--font-main); border-radius: 5px; }
+        
+        .btn-eval.green { border-color: var(--green); color: var(--green); }
+        .btn-eval.green:hover, .btn-eval.green.selected { background: var(--green); color: #000; font-weight: bold; box-shadow: 0 0 15px var(--green); text-shadow: none; }
+        
+        .btn-eval.yellow { border-color: var(--yellow); color: var(--yellow); }
+        .btn-eval.yellow:hover, .btn-eval.yellow.selected { background: var(--yellow); color: #000; font-weight: bold; box-shadow: 0 0 15px var(--yellow); text-shadow: none; }
+        
+        .btn-eval.red { border-color: var(--red); color: var(--red); }
+        .btn-eval.red:hover, .btn-eval.red.selected { background: var(--red); color: #000; font-weight: bold; box-shadow: 0 0 15px var(--red); text-shadow: none; }
+
+        /* === SVG TRIÂNGULOS SIMÉTRICOS === */
+        .svg-container { display: flex; justify-content: center; margin: 20px 0; }
+        svg.geometry { max-width: 350px; width: 100%; height: auto; overflow: visible; background: rgba(0,0,0,0.4); padding: 20px; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; }
+        body.light-mode svg.geometry { background: #fff; border-color: #ddd; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .svg-line { fill: none; stroke: var(--text-main); stroke-width: 3; }
+        .svg-text { fill: var(--text-main); font-family: var(--font-mono); font-size: 24px; }
+        
+        .hl-senos { stroke: var(--cyan); fill: var(--cyan); stroke-width: 5; font-weight: bold; }
+        .hl-senos-arc { fill: rgba(0, 243, 255, 0.3); stroke: var(--cyan); stroke-width: 2; }
+        .hl-cos { stroke: var(--green); fill: var(--green); stroke-width: 5; font-weight: bold; }
+        .hl-cos-arc { fill: rgba(0, 255, 102, 0.3); stroke: var(--green); stroke-width: 2; }
+
+        /* TABELA NOTÁVEL */
+        table.formal-table { width: 100%; border-collapse: collapse; margin: 20px 0; text-align: center; background: rgba(0,0,0,0.4); }
+        body.light-mode table.formal-table { background: #fff; }
+        table.formal-table th, table.formal-table td { border: 1px solid var(--cyan); padding: 15px; font-size: 1.2rem; }
+        body.light-mode table.formal-table th, body.light-mode table.formal-table td { border-color: #ccc; color: #111; }
+        table.formal-table th { background: rgba(0, 243, 255, 0.1); color: var(--cyan); font-family: var(--font-mono); }
+        body.light-mode table.formal-table th { background: #f0f8ff; color: #005bb5; }
+
+        /* === SALA DE DESCANSO === */
+        .btn-rest { position: fixed; bottom: 30px; right: 30px; background: #008080; border: 2px solid #40e0d0; color: #fff; padding: 15px 20px; border-radius: 50px; cursor: pointer; font-family: var(--font-main); display: flex; align-items: center; gap: 10px; z-index: 1000; box-shadow: 0 0 15px rgba(64,224,208,0.5); transition: 0.3s; font-weight: bold; }
+        .btn-rest:hover { transform: scale(1.05); background: #40e0d0; color: #000; }
+        .modal-rest { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 15, 15, 0.98); z-index: 20000; display: none; flex-direction: column; justify-content: center; align-items: center; padding: 20px; text-align: center; }
+        .breathing-circle { width: 150px; height: 150px; border-radius: 50%; background: radial-gradient(circle, #40e0d0, transparent); margin-bottom: 40px; animation: breathe 8s infinite ease-in-out; opacity: 0.8; box-shadow: 0 0 50px #40e0d0; }
+        @keyframes breathe { 0%, 100% { transform: scale(1); opacity: 0.4; } 50% { transform: scale(2.5); opacity: 1; } }
+        .rest-text { color: #40e0d0; font-size: 1.5rem; max-width: 600px; line-height: 1.8; margin-bottom: 30px; }
+        .btn-return { background: transparent; border: 1px solid #40e0d0; color: #40e0d0; padding: 12px 30px; font-size: 1.1rem; cursor: pointer; opacity: 0.5; pointer-events: none; transition: 0.5s; text-transform: uppercase; border-radius: 5px; }
+        .btn-return.active { opacity: 1; pointer-events: auto; }
+        .btn-return.active:hover { background: #40e0d0; color: #000; }
+
+        /* === FINALIZAÇÃO E CERTIFICADO === */
+        .finish-section { text-align: center; margin: 60px 0; }
+        .btn-primary { background: var(--purple); color: #fff; border: 2px solid #fff; padding: 15px 30px; font-size: 1.2rem; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.3s; box-shadow: 0 0 20px var(--purple); border-radius: 5px; }
+        .btn-primary:hover { background: #fff; color: var(--purple); }
+
+        #cert-wrapper { display: none; margin-top: 40px; flex-direction: column; align-items: center; gap: 20px; width: 100%; overflow-x: auto; padding-bottom: 20px; }
+        
+        /* Layout Base do Certificado (Renderiza bonito na Web e no JPG) */
+        .cert-layout { background: #0a0a0a; padding: 30px; width: 100%; max-width: 900px; text-align: center; position: relative; color: #fff; box-sizing: border-box; font-family: var(--font-main); }
+        .cert-border-inner { border: 2px solid var(--cyan); padding: 30px; outline: 1px solid var(--purple); outline-offset: -10px; background: rgba(0,0,0,0.6); position: relative; }
+        .cyber-emblem { width: 80px; height: 80px; margin: 0 auto 15px; border: 2px solid var(--purple); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; background: #111; color: var(--purple); font-family: 'Times New Roman', serif; }
+        .cert-header { text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px; font-size: 0.9rem; color: #aaa; }
+        .cert-title { font-size: 2.2rem; color: var(--green); margin-bottom: 5px; text-shadow: none; letter-spacing: 2px; text-transform: uppercase; }
+        .cert-subtitle { font-size: 1.4rem; color: var(--cyan); margin-bottom: 25px; font-weight: normal; }
+        
+        .cert-text { font-size: 1.15rem; line-height: 1.8; margin-bottom: 20px; }
+        .cert-name-highlight { font-size: 1.8rem; text-transform: uppercase; color: var(--purple); display: block; border-bottom: 1px dashed var(--purple); margin: 10px auto; max-width: 80%; padding-bottom: 5px; }
+        .cert-warning { font-size: 1rem; color: var(--red); font-weight: bold; background: rgba(255,0,60,0.1); padding: 10px; border-radius: 5px; border: 1px solid var(--red); display: inline-block; margin-bottom: 25px; }
+
+        .cert-data-grid { text-align: left; background: rgba(255,255,255,0.03); border: 1px dashed #444; padding: 20px; font-family: var(--font-mono); font-size: 1.05rem; line-height: 1.8; margin-bottom: 30px; border-radius: 5px; }
+        .cert-data-grid span { color: var(--cyan); font-weight: bold; }
+        
+        .cert-footer { display: flex; justify-content: space-between; align-items: flex-end; text-align: left; font-size: 0.9rem; color: #ccc; margin-top: 10px; }
+        .signature-line { text-align: center; border-top: 1px solid #777; padding-top: 5px; width: 250px; font-style: italic; }
+
+        /* MODO PDF INFALÍVEL (Proporção Exata do A4 Paisagem em Pixels - Impede a quebra de página) */
+        .pdf-mode { 
+            background: #ffffff !important; 
+            color: #000000 !important; 
+            width: 1122px !important; /* Largura A4 em 96 DPI */
+            height: 792px !important; /* Altura A4 em 96 DPI */
+            max-width: none !important; 
+            padding: 40px !important; /* Espaço em branco em volta do certificado */
+            box-sizing: border-box !important;
+            margin: 0 !important;
+            overflow: hidden !important; 
+            position: relative !important;
+        }
+        .pdf-mode .cert-border-inner { 
+            background: #ffffff !important; 
+            border: 4px double #222 !important; 
+            outline: 1px solid #222 !important; 
+            box-sizing: border-box !important; 
+            height: 100% !important; 
+            padding: 40px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+        }
+        .pdf-mode * { color: #000000 !important; text-shadow: none !important; border-color: #444 !important; }
+        .pdf-mode .cyber-emblem { background: #f4f4f4 !important; border: 2px solid #000 !important; color: #000 !important; margin-bottom: 10px !important; }
+        .pdf-mode .cert-data-grid { background: transparent !important; border: 1px dashed #666 !important; margin-bottom: 0 !important; padding: 15px !important; }
+        .pdf-mode .cert-subtitle { margin-bottom: 10px !important; }
+        .pdf-mode .cert-text { margin-bottom: 10px !important; }
+        .pdf-mode .cert-warning { background: transparent !important; color: #000 !important; border: 2px dashed #000 !important; }
+
+        /* Botões de Ação do Certificado */
+        .btn-action-group { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; width: 100%; margin-top: 15px; }
+        .btn-pdf { background: #e0e0e0; color: #000; border: 2px solid #555; padding: 12px 20px; font-size: 1rem; cursor: pointer; font-weight: bold; transition: 0.3s; border-radius: 5px; }
+        .btn-pdf:hover { background: #fff; border-color: #000; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .btn-jpg { background: var(--green); color: #000; border: 2px solid transparent; padding: 12px 20px; font-size: 1rem; cursor: pointer; font-weight: bold; transition: 0.3s; box-shadow: 0 0 15px rgba(0,255,102,0.4); border-radius: 5px; }
+        .btn-jpg:hover { background: #fff; border-color: var(--green); }
+        .btn-edit { background: transparent; color: var(--yellow); border: 1px dashed var(--yellow); padding: 12px 20px; font-size: 1rem; cursor: pointer; font-weight: bold; transition: 0.3s; border-radius: 5px; }
+        .btn-edit:hover { background: var(--yellow); color: #000; }
+
+        @media(max-width: 768px) {
+            .header-title { font-size: 1.5rem; }
+            .cert-layout { padding: 15px; }
+            .cert-border-inner { padding: 15px; }
+            .cert-title { font-size: 1.5rem; }
+            .cert-name-highlight { font-size: 1.3rem; max-width: 100%; }
+            .cert-footer { flex-direction: column; gap: 30px; align-items: center; text-align: center; }
+            .math-box { font-size: 1.1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- BACKGROUND AURORA BOREAL -->
+    <div class="aurora-bg">
+        <div class="aurora-blob blob-1"></div>
+        <div class="aurora-blob blob-2"></div>
+        <div class="aurora-blob blob-3"></div>
+    </div>
+
+    <!-- RÉGUA DE LEITURA -->
+    <div class="reading-ruler" id="reading-ruler"></div>
+
+    <!-- OVERLAY DE LOGIN INICIAL -->
+    <div class="login-overlay" id="login-overlay">
+        <div class="login-box">
+            <h2>NIVELAMENTO TÁTICO</h2>
+            <p style="color: #888; margin-bottom: 20px;">Protocolo de Identificação Obrigatório</p>
+            <input type="text" id="student-input" class="login-input" placeholder="Digite seu Nome Completo" autocomplete="off" onkeypress="handleLoginEnter(event)">
+            <button class="btn-login" onclick="startSession()">INICIAR AULA</button>
+        </div>
+    </div>
+
+    <!-- PAINEL SUPERIOR -->
+    <header class="top-panel">
+        <div class="btn-group">
+            <button class="btn-access" onclick="toggleTheme()" id="btn-theme">Alternar Tema</button>
+            <button class="btn-access" onclick="toggleNeon()" id="btn-neon">Alternar Neon</button>
+            <button class="btn-access" onclick="toggleRuler()" id="btn-ruler">Régua de Leitura</button>
+            <button class="btn-access" style="border-color: var(--red); color: var(--red);" onclick="resetSystem()">Resetar Aula</button>
+        </div>
+        
+        <!-- Barra de Progresso -->
+        <div class="progress-wrapper">
+            <div class="progress-fill" id="progress-bar">0%</div>
+        </div>
+    </header>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="container">
+        <h1 class="header-title">Lei dos Cossenos</h1>
+
+        <div class="dica-ouro">
+            <strong>💡 Dica de Ouro:</strong> Alunos que utilizam a <em>"Sala de Descanso"</em> (botão flutuante) para refletir, respirar e oxigenar o cérebro ganham <strong>pontos extras de resiliência</strong> no Certificado Final. Gerenciar a mente é tão importante quanto memorizar as equações!
+        </div>
+
+        <!-- MÓDULO 1: LEI DOS SENOS -->
+        <section class="tron-card" id="card-1">
+            <h2>Módulo 1: Lei dos Senos</h2>
+            <p>Em um triângulo qualquer, as medidas dos lados são proporcionais aos senos dos ângulos opostos. Esta lei exige, para sua aplicação, o conhecimento de um par oposto completo (um ângulo e seu lado correspondente) e mais um dado adicional.</p>
+            
+            <div class="math-box">
+                $$ \frac{a}{\sin(\hat{A})} = \frac{b}{\sin(\hat{B})} = \frac{c}{\sin(\hat{C})} $$
+            </div>
+
+            <p style="text-align: center; color: var(--cyan); margin-top: 15px;"><em>Observe no esquema os pares opostos em destaque (Ângulo A com Lado a; Ângulo B com Lado b):</em></p>
+
+            <div class="svg-container">
+                <svg class="geometry" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M 180 70 A 40 40 0 0 0 220 70 Z" class="hl-senos-arc" />
+                    <path d="M 90 260 A 40 40 0 0 0 70 230 Z" class="hl-senos-arc" />
+                    
+                    <line x1="200" y1="40" x2="50" y2="260" class="svg-line" />
+                    <line x1="200" y1="40" x2="350" y2="260" class="svg-line hl-senos" />
+                    <line x1="50" y1="260" x2="350" y2="260" class="svg-line hl-senos" />
+                    
+                    <text x="190" y="30" class="svg-text hl-senos">A</text>
+                    <text x="25" y="280" class="svg-text hl-senos">B</text>
+                    <text x="360" y="280" class="svg-text">C</text>
+                    
+                    <text x="290" y="150" class="svg-text hl-senos">b</text>
+                    <text x="190" y="290" class="svg-text hl-senos">a</text>
+                    <text x="100" y="150" class="svg-text">c</text>
+                </svg>
+            </div>
+
+            <div class="eval-grid">
+                <button class="btn-eval green" onclick="registerEvaluation(1, 'Excelente (Compreendido Perfeitamente)', 'green')">Compreendi perfeitamente o conteúdo e finalizei a transcrição.</button>
+                <button class="btn-eval yellow" onclick="registerEvaluation(1, 'Bom (Compreensão Parcial/Dúvidas)', 'yellow')">Efetuei a leitura e a cópia, contudo persistem dúvidas conceituais.</button>
+                <button class="btn-eval red" onclick="registerEvaluation(1, 'Atenção (Não Compreendido)', 'red')">Concluí a transcrição, mas não obtive compreensão do conteúdo.</button>
+            </div>
+        </section>
+
+        <!-- MÓDULO 2: LEI DOS COSSENOS -->
+        <section class="tron-card" id="card-2">
+            <h2>Módulo 2: A Lei dos Cossenos</h2>
+            <p>Em um triângulo qualquer, o quadrado da medida de um lado é igual à soma dos quadrados das medidas dos outros dois lados, menos o dobro do produto das medidas desses dois lados pelo cosseno do ângulo por eles formado.</p>
+            
+            <div class="math-box">
+                $$ a^2 = b^2 + c^2 - 2bc \cdot \cos(\hat{A}) $$
+            </div>
+
+            <p style="text-align: center; color: var(--green); margin-top: 15px;"><em>Critério LAL (Lado-Ângulo-Lado): O ângulo em destaque encontra-se encurralado entre os dois lados conhecidos.</em></p>
+
+            <div class="svg-container">
+                <svg class="geometry" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M 175 75 A 45 45 0 0 0 225 75 Z" class="hl-cos-arc" />
+                    
+                    <line x1="200" y1="40" x2="50" y2="260" class="svg-line hl-cos" />
+                    <line x1="200" y1="40" x2="350" y2="260" class="svg-line hl-cos" />
+                    <line x1="50" y1="260" x2="350" y2="260" class="svg-line" style="opacity: 0.3;" />
+                    
+                    <text x="190" y="30" class="svg-text hl-cos">A</text>
+                    <text x="25" y="280" class="svg-text">B</text>
+                    <text x="360" y="280" class="svg-text">C</text>
+                    
+                    <text x="290" y="150" class="svg-text hl-cos">b</text>
+                    <text x="100" y="150" class="svg-text hl-cos">c</text>
+                    <text x="190" y="290" class="svg-text">a</text>
+                </svg>
+            </div>
+
+            <div class="eval-grid">
+                <button class="btn-eval green" onclick="registerEvaluation(2, 'Excelente (Compreendido Perfeitamente)', 'green')">Compreendi perfeitamente o conteúdo e finalizei a transcrição.</button>
+                <button class="btn-eval yellow" onclick="registerEvaluation(2, 'Bom (Compreensão Parcial/Dúvidas)', 'yellow')">Efetuei a leitura e a cópia, contudo persistem dúvidas conceituais.</button>
+                <button class="btn-eval red" onclick="registerEvaluation(2, 'Atenção (Não Compreendido)', 'red')">Concluí a transcrição, mas não obtive compreensão do conteúdo.</button>
+            </div>
+        </section>
+
+        <!-- MÓDULO 3: EXEMPLO PRÁTICO -->
+        <section class="tron-card" id="card-3">
+            <h2>Módulo 3: Exemplo Prático Guiado</h2>
+            <p>Um topógrafo precisa medir a distância entre os pontos <strong>A</strong> e <strong>C</strong> separados por um lago. Ele determinou que a distância do ponto A ao B é de <strong style="color: var(--purple);">80m</strong>, de B a C é de <strong style="color: var(--cyan);">100m</strong>, e o ângulo formado no vértice B é de <strong style="color: var(--yellow);">60°</strong>. Qual o comprimento do lago (Lado b)?</p>
+            
+            <p style="color: #888; text-align: center; margin-top: 15px;"><em>Acompanhe a fatoração matemática sem uso de decimais e associe as cores:</em></p>
+
+            <div class="math-box">
+                <!-- Fórmula Genérica -->
+                $$ b^2 = \textcolor{#bc13fe}{c}^2 + \textcolor{#00f3ff}{a}^2 - 2 \cdot \textcolor{#bc13fe}{c} \cdot \textcolor{#00f3ff}{a} \cdot \cos(\textcolor{#ffee00}{\hat{B}}) $$
+                <br>
+                <!-- Substituição -->
+                $$ b^2 = \textcolor{#bc13fe}{80}^2 + \textcolor{#00f3ff}{100}^2 - 2 \cdot \textcolor{#bc13fe}{80} \cdot \textcolor{#00f3ff}{100} \cdot \cos(\textcolor{#ffee00}{60^\circ}) $$
+                <br>
+                <!-- Potências e Fração do Cosseno -->
+                $$ b^2 = 6400 + 10000 - 2 \cdot 8000 \cdot \textcolor{#ffee00}{\frac{1}{2}} $$
+                <br>
+                <!-- Simplificação via Cancelamento LaTeX -->
+                $$ b^2 = 16400 - \cancel{2} \cdot 8000 \cdot \frac{1}{\cancel{2}} $$
+                <br>
+                <!-- Subtração -->
+                $$ b^2 = 16400 - 8000 $$
+                <br>
+                $$ b^2 = 8400 $$
+                <br>
+                <!-- Raiz e Fatoração -->
+                $$ b = \sqrt{8400} $$
+                <br>
+                $$ b = \sqrt{400 \cdot 21} $$
+                <br>
+                <!-- Resultado Final em Raiz Irredutível -->
+                $$ b = 20\sqrt{21} \text{ m} $$
+            </div>
+
+            <div class="eval-grid">
+                <button class="btn-eval green" onclick="registerEvaluation(3, 'Excelente (Compreendido Perfeitamente)', 'green')">Acompanhei o passo a passo de fatoração e compreendi a aplicação.</button>
+                <button class="btn-eval yellow" onclick="registerEvaluation(3, 'Bom (Compreensão Parcial/Dúvidas)', 'yellow')">Acompanhei a montagem, porém tenho dúvidas nas simplificações.</button>
+                <button class="btn-eval red" onclick="registerEvaluation(3, 'Atenção (Não Compreendido)', 'red')">As simplificações e propriedades de raízes ficaram confusas.</button>
+            </div>
+        </section>
+
+        <!-- MÓDULO 4: TABELA NOTÁVEL -->
+        <section class="tron-card" id="card-4">
+            <h2>Módulo 4: Ângulos Notáveis</h2>
+            <p>O domínio das equações trigonométricas exige a rápida extração dos valores dos arcos do primeiro quadrante. Consulte a tabela analítica e memorize o padrão.</p>
+            
+            <table class="formal-table">
+                <thead>
+                    <tr>
+                        <th>Função</th>
+                        <th>30°</th>
+                        <th>45°</th>
+                        <th>60°</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>$$ \sin $$</strong></td>
+                        <td>$$ \frac{1}{2} $$</td>
+                        <td>$$ \frac{\sqrt{2}}{2} $$</td>
+                        <td>$$ \frac{\sqrt{3}}{2} $$</td>
+                    </tr>
+                    <tr>
+                        <td><strong>$$ \cos $$</strong></td>
+                        <td>$$ \frac{\sqrt{3}}{2} $$</td>
+                        <td>$$ \frac{\sqrt{2}}{2} $$</td>
+                        <td>$$ \frac{1}{2} $$</td>
+                    </tr>
+                    <tr>
+                        <td><strong>$$ \tan $$</strong></td>
+                        <td>$$ \frac{\sqrt{3}}{3} $$</td>
+                        <td>$$ 1 $$</td>
+                        <td>$$ \sqrt{3} $$</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="song-box">
+                "1, 2, 3... 3, 2, 1... Tudo sobre 2!<br>
+                A raiz vai no 3 e também no 2.<br>
+                A tangente é diferente, vejam só vocês:<br>
+                Raiz de 3 sobre 3, 1, raiz de 3!"
+            </div>
+
+            <div class="eval-grid">
+                <button class="btn-eval green" onclick="registerEvaluation(4, 'Excelente (Compreendido Perfeitamente)', 'green')">Compreendi perfeitamente o conteúdo e finalizei a transcrição.</button>
+                <button class="btn-eval yellow" onclick="registerEvaluation(4, 'Bom (Compreensão Parcial/Dúvidas)', 'yellow')">Efetuei a leitura e a cópia, contudo persistem dúvidas conceituais.</button>
+                <button class="btn-eval red" onclick="registerEvaluation(4, 'Atenção (Não Compreendido)', 'red')">Concluí a transcrição, mas não obtive compreensão do conteúdo.</button>
+            </div>
+        </section>
+
+        <!-- FINALIZAÇÃO -->
+        <section class="finish-section">
+            <button class="btn-primary" onclick="generateCertificate()">Finalizar Aula e Gerar Certificado</button>
+            
+            <div id="cert-wrapper">
+                <!-- O Layout do Certificado -->
+                <div class="cert-layout" id="certificate-node">
+                    <div class="cert-border-inner">
+                        <div class="cyber-emblem">∑</div>
+                        <p class="cert-header">Ministério da Educação Tática</p>
+                        <h3 class="cert-title">CERTIFICADO DE CONCLUSÃO</h3>
+                        <h4 class="cert-subtitle">LEI DOS COSSENOS E SENOS</h4>
+                        
+                        <p class="cert-text">
+                            Certificamos, para os devidos fins de validação acadêmica, que o(a) agente:<br>
+                            <strong id="cert-name" class="cert-name-highlight">---</strong>
+                            concluiu com êxito o treinamento de geometria analítica, dominando os mapeamentos abaixo.
+                        </p>
+
+                        <div class="cert-warning">
+                            ATENÇÃO: Para o recebimento do visto do professor, todos os módulos e transcrições listados devem estar integralmente registrados no caderno do aluno.
+                        </div>
+                        
+                        <div class="cert-data-grid">
+                            <div style="margin-bottom: 10px; font-size: 1.1rem; color: #fff;"><strong>Mapeamento de Compreensão Autodeclarada:</strong></div>
+                            <div>- Módulo 1 (Lei dos Senos): <span id="cert-mod1">Pendente</span></div>
+                            <div>- Módulo 2 (Lei dos Cossenos): <span id="cert-mod2">Pendente</span></div>
+                            <div>- Módulo 3 (Exemplo Guiado): <span id="cert-mod3">Pendente</span></div>
+                            <div>- Módulo 4 (Ângulos Notáveis): <span id="cert-mod4">Pendente</span></div>
+                        </div>
+                        
+                        <div class="cert-footer">
+                            <div style="line-height: 1.6;">
+                                Uso de Reflexão (Sala de Descanso): <span id="cert-rest" style="color: var(--cyan); font-weight: bold;">Nenhum</span><br>
+                                Tempo de Concentração Ativa: <span id="cert-time" style="color: var(--cyan); font-weight: bold;">00m 00s</span>
+                            </div>
+                            <div class="signature-line">
+                                Visto do Professor Responsável
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Controles do Certificado -->
+                <div class="btn-action-group">
+                    <button class="btn-pdf" onclick="downloadPDF()">Gerar PDF (Garante 1 Página / P/ Imprimir)</button>
+                    <button class="btn-jpg" onclick="downloadJPG()">Baixar JPG (Estilo Cyberpunk Neon)</button>
+                    <button class="btn-edit" onclick="editName()">Corrigir NOME no Certificado</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- MODAL DE DESCANSO -->
+    <div class="modal-rest" id="rest-modal">
+        <div class="breathing-circle"></div>
+        <div class="rest-text">Respire profundamente... expire devagar...<br>Pausar é uma habilidade avançada de foco.<br><br>Você acabou de ganhar pontos de resiliência cognitiva!</div>
+        <button class="btn-return" id="btn-return-rest" onclick="closeRestRoom()">Retornar aos Estudos (Aguarde...)</button>
+    </div>
+
+    <!-- BOTÃO FLUTUANTE DE DESCANSO -->
+    <button class="btn-rest" onclick="openRestRoom()">Sala de Descanso</button>
+
+    <!-- LÓGICA JAVASCRIPT -->
+    <script>
+        const LS_KEY = 'geo_cossenos_master_v6';
+        
+        // Estado Padrão
+        let state = {
+            studentName: '',
+            startTime: Date.now(),
+            mod1: 'Pendente',
+            mod2: 'Pendente',
+            mod3: 'Pendente',
+            mod4: 'Pendente',
+            restRoomUsed: false,
+            themeLight: false,
+            safeNeon: false,
+            rulerActive: false
+        };
+
+        // INICIALIZAÇÃO
+        document.addEventListener("DOMContentLoaded", function() {
+            // Renderiza KaTeX
+            renderMathInElement(document.body, {
+                delimiters: [ {left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false} ],
+                throwOnError: false
+            });
+            
+            // Eventos Régua
+            document.addEventListener('mousemove', updateRulerPos);
+            document.addEventListener('touchstart', updateRulerPos, {passive: true});
+            document.addEventListener('click', updateRulerPos);
+
+            // Carrega Estado Local
+            const saved = localStorage.getItem(LS_KEY);
+            if(saved) {
+                const parsed = JSON.parse(saved);
+                state = { ...state, ...parsed };
+                
+                if(state.studentName && state.studentName.trim() !== '') {
+                    document.getElementById('login-overlay').style.display = 'none';
+                }
+                
+                applyVisualState();
+                updateProgressBar();
+            }
+        });
+
+        // SALVAMENTO DE ESTADO
+        function saveState() {
+            localStorage.setItem(LS_KEY, JSON.stringify(state));
+        }
+
+        // TELA DE LOGIN (INÍCIO DA AULA)
+        function startSession() {
+            const inputName = document.getElementById('student-input').value.trim();
+            if (inputName === '') {
+                alert("Por favor, insira o seu nome completo para prosseguir.");
+                return;
+            }
+            state.studentName = inputName;
+            state.startTime = Date.now();
+            saveState();
+
+            const overlay = document.getElementById('login-overlay');
+            overlay.style.opacity = '0';
+            setTimeout(() => { overlay.style.display = 'none'; }, 500);
+        }
+
+        function handleLoginEnter(e) {
+            if (e.key === 'Enter') startSession();
+        }
+
+        // RESET COMPLETO DA PÁGINA
+        function resetSystem() {
+            if(confirm("Deseja realmente limpar todos os seus registros e começar uma nova aula do zero?")) {
+                localStorage.removeItem(LS_KEY);
+                location.reload();
+            }
+        }
+
+        // CORREÇÃO DE NOME
+        function editName() {
+            const newName = prompt("Digite seu Nome Completo de forma correta para o certificado:", state.studentName);
+            if (newName && newName.trim() !== "") {
+                state.studentName = newName.trim();
+                document.getElementById('cert-name').innerText = state.studentName;
+                saveState();
+            }
+        }
+
+        // BARRA DE PROGRESSO DINÂMICA
+        function updateProgressBar() {
+            let completed = 0;
+            if(state.mod1 !== 'Pendente') completed++;
+            if(state.mod2 !== 'Pendente') completed++;
+            if(state.mod3 !== 'Pendente') completed++;
+            if(state.mod4 !== 'Pendente') completed++;
+            
+            const percent = (completed / 4) * 100;
+            const bar = document.getElementById('progress-bar');
+            bar.style.width = `${percent}%`;
+            bar.innerText = `${percent}%`;
+            
+            if (percent === 100) {
+                bar.style.backgroundColor = 'var(--green)';
+                bar.style.boxShadow = '0 0 15px var(--green)';
+            } else {
+                bar.style.backgroundColor = 'var(--cyan)';
+                bar.style.boxShadow = '0 0 10px var(--cyan)';
+            }
+        }
+
+        // RÉGUA DE LEITURA
+        function updateRulerPos(e) {
+            if(!state.rulerActive) return;
+            const y = e.touches ? e.touches[0].clientY : e.clientY;
+            document.getElementById('reading-ruler').style.top = y + 'px';
+        }
+
+        // CONTROLES DE ACESSIBILIDADE
+        function toggleTheme() {
+            state.themeLight = !state.themeLight;
+            document.body.classList.toggle('light-mode', state.themeLight);
+            saveState();
+        }
+        function toggleNeon() {
+            state.safeNeon = !state.safeNeon;
+            document.body.classList.toggle('safe-neon', state.safeNeon);
+            saveState();
+        }
+        function toggleRuler() {
+            state.rulerActive = !state.rulerActive;
+            document.body.classList.toggle('ruler-active', state.rulerActive);
+            saveState();
+        }
+
+        // REAPLICAÇÃO VISUAL DA MEMÓRIA
+        function applyVisualState() {
+            if(state.themeLight) document.body.classList.add('light-mode');
+            if(state.safeNeon) document.body.classList.add('safe-neon');
+            if(state.rulerActive) document.body.classList.add('ruler-active');
+
+            [1, 2, 3, 4].forEach(num => {
+                const mod = state[`mod${num}`];
+                if(mod !== 'Pendente') {
+                    const card = document.getElementById(`card-${num}`);
+                    const btns = card.querySelectorAll('.btn-eval');
+                    
+                    card.classList.remove('status-green', 'status-yellow', 'status-red');
+                    
+                    btns.forEach(b => {
+                        if(mod.includes('Excelente') && b.classList.contains('green')) {
+                            b.classList.add('selected');
+                            card.classList.add('status-green');
+                        }
+                        else if(mod.includes('Bom') && b.classList.contains('yellow')) {
+                            b.classList.add('selected');
+                            card.classList.add('status-yellow');
+                        }
+                        else if(mod.includes('Atenção') && b.classList.contains('red')) {
+                            b.classList.add('selected');
+                            card.classList.add('status-red');
+                        }
+                    });
+                }
+            });
+        }
+
+        // AUTODECLARAÇÃO E REAÇÃO VISUAL
+        function registerEvaluation(moduleNum, statusText, colorClass) {
+            state[`mod${moduleNum}`] = statusText;
+            saveState();
+
+            const card = document.getElementById(`card-${moduleNum}`);
+            card.classList.remove('status-green', 'status-yellow', 'status-red');
+            card.classList.add(`status-${colorClass}`);
+
+            const buttons = card.querySelectorAll('.btn-eval');
+            buttons.forEach(b => b.classList.remove('selected'));
+            card.querySelector(`.btn-eval.${colorClass}`).classList.add('selected');
+            
+            updateProgressBar();
+        }
+
+        // SALA DE DESCANSO
+        let restInterval;
+        function openRestRoom() {
+            state.restRoomUsed = true;
+            saveState();
+            
+            const modal = document.getElementById('rest-modal');
+            const btn = document.getElementById('btn-return-rest');
+            modal.style.display = 'flex';
+            btn.classList.remove('active');
+            
+            let timeLeft = 15;
+            btn.innerText = `Retornar aos Estudos (Aguarde ${timeLeft}s)`;
+
+            restInterval = setInterval(() => {
+                timeLeft--;
+                btn.innerText = `Retornar aos Estudos (Aguarde ${timeLeft}s)`;
+                if (timeLeft <= 0) {
+                    clearInterval(restInterval);
+                    btn.innerText = "Retornar aos Estudos";
+                    btn.classList.add('active');
+                }
+            }, 1000);
+        }
+
+        function closeRestRoom() {
+            document.getElementById('rest-modal').style.display = 'none';
+        }
+
+        // GERAÇÃO DO CERTIFICADO
+        function generateCertificate() {
+            if(state.mod1 === 'Pendente' || state.mod2 === 'Pendente' || state.mod3 === 'Pendente' || state.mod4 === 'Pendente') {
+                alert("Atenção: Você precisa interagir e se autodeclarar nos 4 módulos antes de gerar o certificado final.");
+                return;
+            }
+
+            if (!state.studentName || state.studentName.trim() === "") {
+                const inputName = prompt("Insira seu Nome Completo para o certificado:");
+                if (!inputName) return;
+                state.studentName = inputName.trim();
+                saveState();
+            }
+
+            const totalSeconds = Math.floor((Date.now() - state.startTime) / 1000);
+            const mins = Math.floor(totalSeconds / 60);
+            const secs = totalSeconds % 60;
+
+            document.getElementById('cert-name').innerText = state.studentName;
+            document.getElementById('cert-time').innerText = `${mins} minutos e ${secs} segundos`;
+            document.getElementById('cert-mod1').innerText = state.mod1;
+            document.getElementById('cert-mod2').innerText = state.mod2;
+            document.getElementById('cert-mod3').innerText = state.mod3;
+            document.getElementById('cert-mod4').innerText = state.mod4;
+            
+            if(state.restRoomUsed) {
+                document.getElementById('cert-rest').innerHTML = "SIM (+10 Pontos de Resiliência)";
+            } else {
+                document.getElementById('cert-rest').innerText = "Não utilizou (Padrão)";
+            }
+
+            const wrapper = document.getElementById('cert-wrapper');
+            wrapper.style.display = 'flex';
+            wrapper.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // DOWNLOAD PDF (Forçando as dimensões Matemáticas do A4 para evitar quebra de tela)
+        function downloadPDF() {
+            const btn = document.querySelector('.btn-pdf');
+            const originalText = btn.innerText;
+            btn.innerText = "Gerando PDF... Aguarde!";
+            
+            const certNode = document.getElementById('certificate-node');
+            
+            // 1. Ativa o modo PDF (Muda o CSS para travar a Largura e Altura em pixels)
+            certNode.classList.add('pdf-mode');
+
+            // 2. Timeout vital para dar tempo de renderizar o Layout "Claro"
+            setTimeout(() => {
+                const opt = {
+                    margin:       0, // Margem zero, pois o padding branco já está no CSS do pdf-mode
+                    filename:     `Certificado_Cossenos_${state.studentName.split(' ')[0]}.pdf`,
+                    image:        { type: 'jpeg', quality: 1 },
+                    html2canvas:  { 
+                        scale: 2, 
+                        useCORS: true,
+                        scrollY: 0, 
+                        scrollX: 0,
+                        windowWidth: 1122 // Força a largura para evitar responsividades acidentais
+                    },
+                    // Força a dimensão da página para caber exatamente no tamanho do bloco
+                    jsPDF:        { unit: 'px', format: [1122, 792], orientation: 'landscape' }
+                };
+
+                html2pdf().set(opt).from(certNode).save().then(() => {
+                    certNode.classList.remove('pdf-mode');
+                    btn.innerText = originalText;
+                }).catch(err => {
+                    certNode.classList.remove('pdf-mode');
+                    btn.innerText = originalText;
+                    alert("Erro ao gerar PDF.");
+                });
+            }, 800);
+        }
+
+        // DOWNLOAD JPG (Fundo Dark/Estilo Cyberpunk Neon)
+        function downloadJPG() {
+            const certNode = document.getElementById('certificate-node');
+            
+            html2canvas(certNode, {
+                backgroundColor: "#0a0a0a",
+                scale: 2 
+            }).then(canvas => {
+                const imgData = canvas.toDataURL("image/jpeg", 0.95);
+                const link = document.createElement('a');
+                link.download = `Certificado_Cyberpunk_${state.studentName.split(' ')[0]}.jpg`;
+                link.href = imgData;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }).catch(err => {
+                alert("Erro ao gerar imagem. Tente a opção PDF.");
+            });
+        }
+    </script>
+</body>
+</html>
